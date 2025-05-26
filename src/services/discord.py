@@ -7,7 +7,6 @@ from io import BytesIO
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord import Intents, Interaction, Object, Attachment, File
-from PyPDF2 import PdfReader
 
 from src.utils import Utils
 from src.services.prompt import PromptBuilder

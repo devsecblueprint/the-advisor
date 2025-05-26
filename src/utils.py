@@ -12,7 +12,7 @@ class Utils:
         # Add basic CSS for better formatting
         css = """
         <style>
-            body { font-family: Arial, sans-serif; margin: 1.5em; }
+            body { font-family: Arial, sans-serif; margin: 0.5em; }
             h1, h2, h3 { color: #333; }
             table { border-collapse: collapse; width: 100%; }
             th, td { border: 1px solid #ddd; padding: 8px; }

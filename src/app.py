@@ -1,6 +1,5 @@
 # main.py
 
-import os
 import threading
 from fastapi import FastAPI, HTTPException
 from src.models import ResumeRequest
