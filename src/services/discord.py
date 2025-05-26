@@ -11,7 +11,7 @@ from discord import Intents, Interaction, Object, Attachment, File
 from src.utils import Utils
 from src.services.prompt import PromptBuilder
 from src.services.resume import ResumeReviewService
-
+from utils import VaultSecretsLoader
 
 load_dotenv()
 
@@ -22,9 +22,14 @@ logging.basicConfig(
 
 class DiscordBotClient:
     def __init__(self):
-        self.token = os.getenv("DISCORD_TOKEN")
+        self.token = VaultSecretsLoader().load_secret("discord-token") or os.getenv("DISCORD_TOKEN")
+
+        if not self.token:
+            raise ValueError("Discord token not found. Set DISCORD_TOKEN environment variable or use Vault secrets.")
+        if not os.getenv("DISCORD_GUILD_ID"):
+            raise ValueError("Discord guild ID not found. Set DISCORD_GUILD_ID environment variable.")
+
         self.guild = Object(id=int(os.getenv("DISCORD_GUILD_ID")))
-        self.api_url = os.getenv("API_URL")
         intents = Intents.default()  # Add this line
         self.bot = commands.Bot(
             command_prefix="/", intents=intents
