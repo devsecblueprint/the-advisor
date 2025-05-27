@@ -73,7 +73,7 @@ class DiscordBotClient:
         ):
             await interaction.response.defer()  # ⬅ acknowledge quickly
 
-            if User is not None:
+            if User is None:
                 user = interaction.user
 
             if interaction.guild is None:
