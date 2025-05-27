@@ -9,9 +9,13 @@ load_dotenv()
 
 class ResumeReviewService:
     def __init__(self, model: str = "command-r-plus"):
-        token = VaultSecretsLoader().load_secret("cohere-api-key") or os.getenv("COHERE_API_KEY")
+        token = VaultSecretsLoader().load_secret("cohere-api-key") or os.getenv(
+            "COHERE_API_KEY"
+        )
         if not token:
-            raise ValueError("Cohere API key not found. Set COHERE_API_KEY environment variable or use Vault secrets.")
+            raise ValueError(
+                "Cohere API key not found. Set COHERE_API_KEY environment variable or use Vault secrets."
+            )
 
         self.client = cohere.Client(token)
         self.model = model

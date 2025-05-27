@@ -2,11 +2,11 @@
 
 import os
 import logging
-from datetime import date
+import time
 from io import BytesIO
 from dotenv import load_dotenv
 from discord.ext import commands
-from discord import Intents, Interaction, Object, Attachment, File
+from discord import Intents, Interaction, Object, Attachment, File, User
 
 from PyPDF2 import PdfReader
 from src.utils import Utils
@@ -23,23 +23,29 @@ logging.basicConfig(
 
 class DiscordBotClient:
     def __init__(self):
-        self.token = VaultSecretsLoader().load_secret("discord-token") or os.getenv("DISCORD_TOKEN")
+        self.token = VaultSecretsLoader().load_secret("discord-token") or os.getenv(
+            "DISCORD_TOKEN"
+        )
 
         if not self.token:
-            raise ValueError("Discord token not found. Set DISCORD_TOKEN environment variable or use Vault secrets.")
+            raise ValueError(
+                "Discord token not found. Set DISCORD_TOKEN environment variable or use Vault secrets."
+            )
         if not os.getenv("DISCORD_GUILD_ID"):
-            raise ValueError("Discord guild ID not found. Set DISCORD_GUILD_ID environment variable.")
+            raise ValueError(
+                "Discord guild ID not found. Set DISCORD_GUILD_ID environment variable."
+            )
 
         self.guild = Object(id=int(os.getenv("DISCORD_GUILD_ID")))
         intents = Intents.default()  # Add this line
-        self.bot = commands.Bot(
-            command_prefix="/", intents=intents
-        )  # Pass intents here
+        self.bot = commands.Bot(command_prefix="/", intents=intents)
 
         @self.bot.check
         async def globally_block_dms(ctx):
             if ctx.guild is None:
-                await ctx.send("❌ Commands can only be used in a server, not in DMs.")
+                await ctx.send(
+                    "Commands can only be used in a server, not in DMs. Please use it in a DSB server.",
+                )
                 return False
             return True
 
@@ -62,13 +68,31 @@ class DiscordBotClient:
             description="Submit your resume for feedback.",
             guild=self.guild,
         )
-        async def review_resume(interaction: Interaction, file: Attachment):
+        async def review_resume(
+            interaction: Interaction, file: Attachment, user: User = None
+        ):
+            if User is not None:
+                interaction.user = user
+
             if interaction.guild is None:
                 await interaction.response.send_message(
-                    "❌ This command can only be used in a server, not in DMs.",
+                    "This command can only be used in a server, not in DMs. Please use it in a server.",
                     ephemeral=True,
                 )
                 return
+
+            if (
+                interaction.user.get_role(
+                    int(os.getenv("DISCORD_COMMUNITY_MANAGER_ID"))
+                )
+                is None
+            ):
+                await interaction.response.send_message(
+                    "You do not have permission to use this command. Please contact a community manager.",
+                    ephemeral=True,
+                )
+                return
+
             await interaction.response.send_message(
                 "Processing your resume, please wait...", ephemeral=True
             )
@@ -92,32 +116,45 @@ class DiscordBotClient:
                     resume_text += page.extract_text() or ""
                 resume = resume_text
             except Exception as e:
-                await interaction.followup.send(f"⚠️ Failed to read PDF: {str(e)}")
+                await interaction.followup.send(
+                    f"We encountered an error reading the PDF. Please ensure it is a valid PDF file, and try again."
+                )
+                logging.error(f"Error reading PDF: {str(e)}")
                 return
 
             try:
                 prompt = PromptBuilder.build_review_prompt(resume_text=resume)
-                logging.info("Generated prompt for resume review")
+                logging.info("Generated prompt for resume review for %s", user.name)
 
                 feedback = ResumeReviewService().generate_feedback(prompt)
                 if not feedback:
                     await interaction.followup.send(
-                        "❌ The Advisor failed to generate feedback."
+                        "I am unable to provide feedback at this time. Please try again later."
+                    )
+                    logging.error(
+                        "No feedback generated for resume review: %s", user.name
                     )
                     return
 
-                logging.info("Received feedback from the resume review service")
+                logging.info(
+                    "Received feedback from the resume review service for %s", user.name
+                )
 
                 pdf_file = Utils.convert_md_to_pdf(feedback)
                 await interaction.followup.send(
-                    content="Your resume feedback is attached as a PDF. Good luck with your job search!",
+                    content=f"Your resume feedback is attached as a PDF. I hope you find this helpful! Good luck with your job search @{user.name}!",
                     file=File(
                         pdf_file,
-                        filename=f"{interaction.user.name}_{date.isoformat(date.today())}.pdf",
+                        filename=f"{user.name}_{time.time()}.pdf",
                     ),
                 )
             except Exception as e:
-                await interaction.followup.send(f"⚠️ Error: {str(e)}")
+                await interaction.followup.send(
+                    "An error occurred while processing your resume that I could not handle. Please contact a community manager for assistance."
+                )
+                logging.error(
+                    f"Error processing resume review for {user.name}: {str(e)}"
+                )
 
     def run(self):
         self.bot.run(self.token)

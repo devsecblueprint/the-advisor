@@ -27,6 +27,7 @@ class Utils:
         pdf_bytes.seek(0)
         return pdf_bytes
 
+
 class VaultSecretsLoader:
     """
     A class to load secrets from Vault Agent-injected files.
