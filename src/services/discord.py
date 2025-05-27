@@ -71,7 +71,7 @@ class DiscordBotClient:
         async def review_resume(
             interaction: Interaction, file: Attachment, user: User = None
         ):
-            await interaction.response.defer(ephemeral=True)  # ⬅ acknowledge quickly
+            await interaction.response.defer()  # ⬅ acknowledge quickly
 
             if User is not None:
                 user = interaction.user
@@ -79,7 +79,6 @@ class DiscordBotClient:
             if interaction.guild is None:
                 await interaction.followup.send(
                     "This command can only be used in a server, not in DMs. Please use it in a server.",
-                    ephemeral=True,
                 )
                 return
 
@@ -90,12 +89,11 @@ class DiscordBotClient:
                 is None
             ):
                 await interaction.followup.send(
-                    "You do not have permission to use this command. Please contact a community manager.",
-                    ephemeral=True,
+                    "<@{user.id}>, you do not have permission to use this command. Please contact a community manager.",
                 )
                 return
 
-            logging.info(f"Received resume for review from {interaction.user.name}.")
+            logging.info(f"Received resume for review from {user.name}.")
 
             # Check if the user attached a file (resume) via the 'file' parameter
             if file is None:
