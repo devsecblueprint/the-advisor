@@ -77,7 +77,7 @@ class DiscordBotClient:
                 user = interaction.user
 
             if interaction.guild is None:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "This command can only be used in a server, not in DMs. Please use it in a server.",
                     ephemeral=True,
                 )
@@ -89,15 +89,12 @@ class DiscordBotClient:
                 )
                 is None
             ):
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "You do not have permission to use this command. Please contact a community manager.",
                     ephemeral=True,
                 )
                 return
 
-            await interaction.response.send_message(
-                "Processing your resume, please wait...", ephemeral=True
-            )
             logging.info(f"Received resume for review from {interaction.user.name}.")
 
             # Check if the user attached a file (resume) via the 'file' parameter
