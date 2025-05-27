@@ -72,7 +72,7 @@ class DiscordBotClient:
             interaction: Interaction, file: Attachment, user: User = None
         ):
             if User is not None:
-                interaction.user = user
+                user = interaction.user
 
             if interaction.guild is None:
                 await interaction.response.send_message(
@@ -83,7 +83,7 @@ class DiscordBotClient:
 
             if (
                 interaction.user.get_role(
-                    int(os.getenv("DISCORD_COMMUNITY_MANAGER_ID"))
+                    int(os.getenv("DISCORD_COMMUNITY_MANAGER_ROLE_ID"))
                 )
                 is None
             ):
