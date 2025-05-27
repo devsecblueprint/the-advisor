@@ -71,6 +71,8 @@ class DiscordBotClient:
         async def review_resume(
             interaction: Interaction, file: Attachment, user: User = None
         ):
+            await interaction.response.defer(ephemeral=True)  # ⬅ acknowledge quickly
+
             if User is not None:
                 user = interaction.user
 
@@ -142,7 +144,7 @@ class DiscordBotClient:
 
                 pdf_file = Utils.convert_md_to_pdf(feedback)
                 await interaction.followup.send(
-                    content=f"Your resume feedback is attached as a PDF. I hope you find this helpful! Good luck with your job search @{user.name}!",
+                    content=f"<@{user.id}>, your resume feedback is attached as a PDF. I hope you find this helpful! Good luck with your job search!",
                     file=File(
                         pdf_file,
                         filename=f"{user.name}_{time.time()}.pdf",
